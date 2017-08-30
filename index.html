@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TITLE</title>
+
+</head>
+<body>
+<div id="message">&nbsp;</div>
+<div id="preinit">
+    when to complete (HH:MM): <input type="text" id="completeAt" value="0:0"/> <br/>
+    <input type="button" id="initButton" value="init"/>
+</div>
+<div id="postinit">
+    <ul>
+        <li>
+            <input type="button" id="launchButton" value="launch"/>
+            <input type="button" id="playButton" value="play"/>
+            <input type="button" id="pauseButton" value="pause"/>
+        </li>
+        <li>
+            final target total: <input type="text" id="target" value="10000" />
+        </li>
+        <li>
+            currently at: <input type="text" id="at" value="0" />
+        </li>
+        <li>
+            add to total: <input type="text" id="addin" value=""/> <br/> <input type="button" id="addButton" value="add"/>
+        </li>
+    </ul>
+</div>
+
+
+<script src="jquery-3.2.1.slim.min.js"></script>
+<script language="javascript">
+
+    var init = false;
+    var framerate = 20;
+    var w = null;
+    var uiRefs = null;
+    var playing = false;
+    var timer = null;
+    var completeAt = new Date();
+    var startedAt = new Date();
+    var now = new Date();
+    var startAtTotal =0;
+
+    var h = now.getHours();
+    var m = now.getMinutes();
+    h += 2;
+    if(h > 23)
+        h -= 24;
+
+    $('#completeAt').val(h + ':' + m);
+    $('#postinit').hide();
+
+    window.cb = function(objects) {
+        uiRefs = objects;
+        console.log("got launched window info: ", uiRefs);
+    };
+
+    $('#playButton').on('click', play);
+    $('#pauseButton').on('click', pause);
+    $('#launchButton').on('click', function() {
+        w = window.open("", "timerWindow", "menubar=0,toolbar=0,location=0, resizable=yes, scrollbars=no,status=yes")
+        w.document.write('<html lang="en">' +
+            '<head><title>Total Raised</title><style></style></head>' +
+            '<body><div><span id="total">0</span></div>' +
+            '<script language="javascript">' +
+            'if(window.opener) { window.opener.cb({ doc: document, total: document.getElementById("total") }); }); }' +
+            '</' + 'script></body></html>');
+    });
+    $('#addButton').on('click', addin);
+    $('#addin').on('keypress', function(e) {
+        if(e.keyCode == 13) {
+            addin();
+        }
+    })
+
+    function showmsg(m) {
+        $('#message').text(m);
+    }
+
+    $('#initButton').on('click', function() {
+        var ca = $('#completeAt').val();
+        var cap = ca.split(':');
+
+        if(cap.length != 2) {
+            showmsg('start at must be in a 24-hour format HH:MM as in, 00:30 for 12:30 AM')
+            return;
+        }
+
+        // console.log("cap: ", cap);
+
+        now = new Date();
+
+        var hour = cap[0];
+        var min = cap[1];
+        var date = now.getDate();
+        var month = now.getMonth();
+
+        var nowH = completeAt.getHours();
+        var nowM = completeAt.getMinutes();
+
+        if(hour < nowH || hour == nowH && min < nowM)
+            d++;
+        // if(d > max days in this month)
+        //   month++;
+
+        completeAt = new Date(now.getFullYear(), month, date, hour, min);
+        console.log('completeat: ', completeAt);
+
+        $('#preinit').hide();
+        $('#postinit').show();
+
+        showmsg('initialized, ending at: ' + completeAt);
+    })
+
+    function addin() {
+        $('#target').val(Number($('#target').val()) + Number($('#addin').val()));
+        $('#addin').val('');
+    }
+
+    function play() {
+        if(playing) return;
+        playing = true;
+        startedAt = new Date();
+        startAtTotal = Number($('#at').val() || 0);
+        timer = setInterval(tick, 1000.0 / framerate);
+
+        $('#at').prop('disabled' ,true);
+        $('#target').prop('disabled' ,true);
+        $('#playButton').hide();
+        $('#pauseButton').show();
+        $('#addin').focus();
+    }
+
+    function pause() {
+        if(!playing) return;
+        playing = false;
+        clearInterval(timer);
+
+        $('#at').prop('disabled', false);
+        $('#target').prop('disabled', false);
+        $('#playButton').show();
+        $('#pauseButton').hide();
+    }
+
+    function tick() {
+        var at = Number($('#at').val());
+        var now = (new Date()).getTime();
+        var target = Number($('#target').val());
+
+        if(now < startedAt.getTime())
+            return;
+
+        if(now >= completeAt.getTime()) {
+            at = target;
+            pause();
+
+        } else {
+            var frametime = 1000. / framerate;
+            var framesRemaining = (completeAt.getTime() - now) / frametime;
+            at += (target - at) / framesRemaining;
+        }
+
+        at = Math.round(at * 100) / 100;
+
+        $('#at').val(at);
+
+        if(w && w.document) {
+            w.document.getElementById('total').innerHTML = at;
+        }
+
+//        if(uiRefs && uiRefs.total)
+//            $(uiRefs.total, uiRefs.doc).text('$' + at);
+    }
+
+</script>
+</body>
+</html>
