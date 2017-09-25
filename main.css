@@ -1,0 +1,120 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+canvas {
+  display: block;
+  position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+  zindex: 1;
+  pointer-events: none;
+}
+
+body {
+    font-family: "Trebuchet MS", sans-serif;
+}
+
+.control {
+    background: #abcbee;
+    padding: 10px;
+    font-size: 1.3em;
+    max-width: 800px;
+}
+
+button {
+    margin: 10px 0 5px 0;
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1.2em;
+}
+
+input {
+    margin: 10px 0 5px 0;
+    border: #293648;
+    padding: 5px;
+    font-size: 1.2em;
+}
+
+.display {
+    text-align: center;
+    position: relative;
+}
+
+.display .header {
+    padding-top: 50px;
+    background: #ffffff;
+}
+
+.app {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 30px;
+    background: #08366B;
+    color: white;
+}
+
+.total {
+
+}
+
+#total {
+    font-size: 8em;
+    vertical-align: middle;
+    color: white;
+}
+
+.total .label {
+    color: #5e6f8f;
+    font-size: 2em;
+}
+
+.countdown {
+    font-weight: bold;
+}
+
+#clock {
+    font-size: 3em;
+}
+
+.countdown .label {
+    color: #f0f0f0;
+}
+
+.control input[disabled] {
+    background: transparent;
+}
+
+.display img {
+    vertical-align: middle;
+    padding: 10px;
+    border: none;
+}
+
+.control ul {
+    list-style-type: none;
+    line-height: 2em;
+}
+
+.control li {
+    margin-bottom: 10px;
+    padding: 5px;
+    background: #abcbee;
+}
+
+.help {
+    border-top: 1px solid #7f96b0;
+    padding: 5px;
+    font-size: .9em;
+    color: #4c5a6a;
+    line-height: 1;
+}
+
+p {
+    margin-bottom: 20px;
+}

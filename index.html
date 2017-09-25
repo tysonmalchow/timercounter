@@ -2,36 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TITLE</title>
-
+    <title>REACH FOR THE STARS!</title>
+    <link rel="stylesheet" type="text/css" href="main.css"/>
 </head>
-<body>
+<body class="control">
 <div id="message">&nbsp;</div>
 <div id="preinit">
-    when to complete (HH:MM): <input type="text" id="completeAt" value="0:0"/> <br/>
-    <input type="button" id="initButton" value="init"/>
+    to begin, please enter the time at which the timer should complete. please use
+    24-hour format.<br/>
+
+    <input type="text" id="completeAt" value="0:0"/> <br/>
+    <button id="initButton">next</button>
 </div>
 <div id="postinit">
     <ul>
         <li>
-            <input type="button" id="launchButton" value="launch"/>
-            <input type="button" id="playButton" value="play"/>
-            <input type="button" id="pauseButton" value="pause"/>
+            <button id="launchButton">launch</button>
+            <div class="help">
+                Press this to launch the counter. If you accidentally close it, you can launch it again. Drag the
+                newly launched window to your projector screen and set it to full-screen by pressing F11.
+            </div>
+        </li>
+        <li id="playContainer">
+            <button id="playButton">resume</button>
+            <div class="help">
+                Press this to resume the countdown
+            </div>
+        </li>
+        <li id="pauseContainer">
+            <button id="pauseButton">pause</button>
+            <div class="help">
+                Press this to pause the countdown to make changes
+            </div>
         </li>
         <li>
-            final target total: <input type="text" id="target" value="10000" />
+            add to total: <input type="text" id="addin" value=""/> <input type="button" id="addButton" value="add"/><br/>
+            <div class="help">
+                Enter new donation totals here followed by enter (or click add) to increase the final total
+            </div>
         </li>
         <li>
-            currently at: <input type="text" id="at" value="0" />
+            <input type="text" id="at" value="0" />
+            <div class="help">
+                Total displayed on launched window
+            </div>
         </li>
         <li>
-            add to total: <input type="text" id="addin" value=""/> <br/> <input type="button" id="addButton" value="add"/>
+            $<input type="text" id="target" value="10000" />
+            <div class="help">
+                Total donations received. Pause to modify.
+            </div>
+        </li>
+        <li>
+            <span id="finaltime">&nbsp;</span>
+            <div class="help">
+                Ending time (cannot modify)
+            </div>
         </li>
     </ul>
 </div>
 
-
 <script src="jquery-3.2.1.slim.min.js"></script>
+
 <script language="javascript">
 
     var init = false;
@@ -51,7 +83,7 @@
     if(h > 23)
         h -= 24;
 
-    $('#completeAt').val(h + ':' + m);
+    $('#completeAt').val(pad(h, 2) + ':' + pad(m, 2));
     $('#postinit').hide();
 
     window.cb = function(objects) {
@@ -62,13 +94,14 @@
     $('#playButton').on('click', play);
     $('#pauseButton').on('click', pause);
     $('#launchButton').on('click', function() {
-        w = window.open("", "timerWindow", "menubar=0,toolbar=0,location=0, resizable=yes, scrollbars=no,status=yes")
+        w = window.open("window.html", "timerWindow", "menubar=0,toolbar=0,location=0, resizable=yes, scrollbars=no,status=yes")
+        /* w = window.open("", "timerWindow", "menubar=0,toolbar=0,location=0, resizable=yes, scrollbars=no,status=yes")
         w.document.write('<html lang="en">' +
             '<head><title>Total Raised</title><style></style></head>' +
             '<body><div><span id="total">0</span></div>' +
             '<script language="javascript">' +
             'if(window.opener) { window.opener.cb({ doc: document, total: document.getElementById("total") }); }); }' +
-            '</' + 'script></body></html>');
+            '</' + 'script></body></html>'); */
     });
     $('#addButton').on('click', addin);
     $('#addin').on('keypress', function(e) {
@@ -113,7 +146,13 @@
         $('#preinit').hide();
         $('#postinit').show();
 
-        showmsg('initialized, ending at: ' + completeAt);
+        console.log("setting to ", completeAt);
+        $('#finaltime').text('' + completeAt);
+
+        console.log("playz")
+        play();
+
+//        showmsg('initialized, ending at: ' + completeAt);
     })
 
     function addin() {
@@ -130,8 +169,8 @@
 
         $('#at').prop('disabled' ,true);
         $('#target').prop('disabled' ,true);
-        $('#playButton').hide();
-        $('#pauseButton').show();
+        $('#playContainer').hide();
+        $('#pauseContainer').show();
         $('#addin').focus();
     }
 
@@ -142,20 +181,22 @@
 
         $('#at').prop('disabled', false);
         $('#target').prop('disabled', false);
-        $('#playButton').show();
-        $('#pauseButton').hide();
+        $('#playContainer').show();
+        $('#pauseContainer').hide();
     }
 
     function tick() {
         var at = Number($('#at').val());
         var now = (new Date()).getTime();
         var target = Number($('#target').val());
+        var delta = completeAt.getTime() - now;
 
         if(now < startedAt.getTime())
             return;
 
         if(now >= completeAt.getTime()) {
             at = target;
+            delta = 0;
             pause();
 
         } else {
@@ -168,12 +209,26 @@
 
         $('#at').val(at);
 
-        if(w && w.document) {
-            w.document.getElementById('total').innerHTML = at;
-        }
+        if(w && w.document && w.document.getElementById('total')) {
+            w.document.getElementById('total').innerHTML = Math.round(at);
 
-//        if(uiRefs && uiRefs.total)
-//            $(uiRefs.total, uiRefs.doc).text('$' + at);
+            var hr = Math.floor(delta / (1000 * 60 * 60));
+            var mr = Math.floor((delta - hr*1000*60*60) / (1000 * 60));
+            var sr = Math.floor((delta - hr*1000*60*60 - mr*1000*60) / (1000)) + 1;
+
+            if(delta == 0) {
+                sr = 0;
+                w.startConfetti();
+            }
+
+            w.document.getElementById('clock').innerHTML = '' + pad(hr, 2) + ':' + pad(mr, 2)+ ':' + pad(sr, 2);
+        }
+    }
+
+    function pad(n, width, z) {
+      z = z || '0';
+      n = n + '';
+      return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
     }
 
 </script>
